@@ -1,0 +1,373 @@
+FINAL  DESIGN  .plgx 
+
+
+1. TAGS 
+
+	FUNCTION :  DEFINES DIFFERENT SECTION OF THE DOCUMENT 
+
+	SYNTAX : 
+		{TAG_NAME
+			<KEY: Name>
+		}
+			section_data 
+		{ TAG_NAME}
+		
+ 
+	are of to types 
+		global :  only single per file 
+		section :  can be nested 
+
+2. TAG ATTRIBUTTE
+
+	FUNCTION :METADATA ,  TO SET VALUES THAT MIGHT BE REQUIRED TO RENDER THE TAG CONTENT   
+		
+	SYNTAX : 
+		<ATTRIBUTENAME :  VALUE>
+
+	id if defined must be unique throughout the file 
+	key can have a mapped function in the parser , which  overrides the value of the key , after it has been plugged if the value is aplugin       
+
+
+	Reserved tags :
+
+
+3. PLUGIN  :
+
+	FUNCTION : PLACEHOLDER OR TEMPELATE TO REPLACE WITH VALUE FROM DIFFERNET SOURCES 
+
+
+	SYNTAX : 
+		 [ACCESSOR : SCOPE : ACCESS_TYPE : ACESSOR_PARAMS ]
+
+	
+	ACCESSOR  :
+		
+		FUNCTION : NAME OF THE ACCESSOR ,  LIKE KEY IN CASE OF CONFIG PLUGIN OE ENVIRONMENT VARIABLE PLUGIN OR NAME OF THE ATTRIBUTTE OR METHOD IN CASE OF ATTRIBUTTE OR METHOD PLUGIN 
+		
+
+	SCOPE :
+		
+		FUNCTION : DEFINES THE SCOPE OF THE ACCESSOR
+
+		VALID VALUES  :
+			
+			MAIN : THE PARSER 
+			PRNT : TAG HIERARICHAL ACCESSION , REFFERS TO THE PARENT TAG OF THE CURRENT SECTION 
+			CRNT : TAG HIERARICHAL ACCESSION , REFFERS TO THE CURRENT TAG
+			SIBL@ORDER_INDEX : TAG HIERARICHAL ACCESSION , REFFERS TO THE SIBLING TAG AT INDEX ORDER_INDEX 
+			CHILD@ORDER_INDEX : TAG HIERARICHAL ACESSION , REFFERS TO THE CHILD  TAG OF THE CURRENT TAG 
+			GLBL : TAG DIRECT ACCESSION , DIRECT ACCESSION TO THE GLOBAL TAG 		
+			TAG@TAG_ID : TAG DIRECT ACCESSION , DIRECT ACCESSION TO ATAG , BY THE ID IF THE ID HAS BEEN GIVEN TO ANY TAG, ANDD ID MUST BE UNIQUE THROUGHPOUT THE FILE 
+			ENV@USR/SYS : ENVIRONMENT VARIABLES USR: FOR USER VARIABLES , SYS: FOR SYS VARIABLES 
+			CONFIG@CONFIG_REF : CONFIGURATION ACCESSION , FOR READING VALUES FROM A LOCAL CONFIG  FILE 
+	
+
+		SCOPES LIKE : PRNT, CRNT , SIBL, CHILD, TAG  SUPPORTS HEIRARICHAL ACCESION ,I.E. CAN BE CHAINED 		
+
+	ACCESS_TYPE :
+
+		FUNCTION  : DEFINES THE TYPE OF ACCESSION 
+
+		VALID VALUES :
+			
+			COMPUTED : ACCESSION TYPE , DENOTES THAT THE ACCESSOR IS  METHOD
+			PROPERTY : ACCESSION TYPE , DENOTES THAT THE ACCESSOR IS STATIC VALUE , DOES NOT NEED TO BE COMPUTED 
+
+	  
+	ACESSOR_PARAMS :
+		
+		FUNCTION : PARAMETERS FOR THE ACESSOR IF THE  ACCESS_TYPE IS COMPUTED 
+
+	
+
+	VALID SCOPE ACCESS_TYPE PAIR 
+
+		MAIN : BOTH ARE VALID 
+		OTHER THAN MAIN : PROPERTY , WILL BE OVERRIDDEN BY THE PARSER IF  EMPTY 
+
+
+
+5. COMMENTS 
+
+
+	INLINE :
+		
+		SYNTAX :
+			
+			3INLINE COMMENT 
+
+	MULTILINE  :
+		SYNTAX : 
+
+			/* LINE1 
+			  LINE 2 
+			*/ 
+
+
+
+
+
+
+
+
+the current structure of any tag is  {tagname attrs } content to render {tagname} 
+
+
+
+along with many reserved and preddefined attributtes for a tag , i want to a have hidden attribute which can not be defined thoufh <key : value> way as other attributtes defined in the tag opening , but its the 'content ot render' defined between the tag opening and closing 
+
+
+
+there are two  design choices  about a parent tag 
+
+1. singleton , only content or childs 
+
+parent tag should not have any content , i.e any tag can not have structure like this :
+
+{tag1_name
+	attr 1 
+	attr2 
+}
+
+some content 
+
+	{tag1_Name 
+		attr1 
+	}
+		...
+	{ tagName}
+{tag1_name} 
+
+
+in this way the doc will be somewhat less cluttered and  the content that is supposed to be content of the parent   ccan also be replicated by defining  the  child node  with  the same node , in this way  only the leaf nodes will have values to render  
+
+
+2. nonSingleton , can have both content or  childs  
+
+can have content and a child tag , but then the content of the  parent node must be  of highest priority in terms of content rendering 
+i.e tag can have structure like this :
+
+{tag names
+	attr 1 
+	attr2 
+}
+
+some content 
+
+	{tagName 
+		attr1 
+	}
+		...
+	{ tagName}
+{tagname} 
+
+
+ but the  doc can be cluttered, in this way in the  graph the parser builds , the nonleaf nodes can also have content to render  
+
+
+
+if singleton is used then then to achiecve the nonSingleTon behaviour in terms of usage of a tags and content in the doc needs a slight effort , but nonSingleton is used then although this effort is reduced the document might look cluttered, and hybrid  does not sense , as the effort in creating the doc is minimal as 
+
+adding a  contnet to any tag in singleTon mode can be done thorgh this 
+	
+	{Tag 
+		attr
+	} 
+		{tag } pcontent that that was supposed to be for the parent tag {tag}
+		
+		{tag 
+			attr}
+			content or new child
+		{tag}
+		..
+	{tag}
+
+
+
+while adding any tag in nonSingleTon mode :
+
+	{Tag 
+		attr
+	} 
+		content that that was supposed to be for the parent tag
+		{tag 
+			attr}
+			content or new child
+		{tag}
+		..
+	{tag}
+
+the  diffrence in parser tree will be  that the parent node will have n + 1 childs (1 will be  aleaf node for sure) and in the nonSingleTOncase the parne will have only n  nodes . 
+
+------------USE SINGLE TON -------------------------------
+
+
+
+
+
+
+
+
+design choices relalted to achieving hierarical   Tags 
+
+
+1. via structure , only allow nested tags , like  : 
+
+{ tagName  }
+	{tagName}
+		{tagName}
+		{tagName}
+	{tagName}
+	{tagName}
+		content
+	{tagName}
+	...
+{tagName}
+
+
+
+2. via attributte , do not allow  tags, but link parent cand child tags thorugh parent and child attributte 
+
+
+{tagName if singleton is used then then to achiecve the nonSingleTon behaviour in terms of usage of a tags and content in the doc needs a slight effort , but nonSingleton is used then although this effort is reduced the document might look cluttered, and hybrid  does not sense , as the effort in creating the doc is minimal as 
+
+adding a  contnet to any tag in singleTon mode can be done thorgh this 
+	
+	{Tag 
+		attr
+	} 
+		{tag } pcontent that that was supposed to be for the parent tag {tag}
+		
+		{tag 
+			attr}
+			content or new child
+		{tag}
+		..
+	{tag}
+
+
+
+while adding any tag in nonSingleTon mode :
+
+	{Tag 
+		attr
+	} 
+		content that that was supposed to be for the parent tag
+		{tag 
+			attr}
+			content or new child
+		{tag}
+		..
+	{tag}
+
+the  diffrence in parser tree will be  that the parent node will have n + 1 childs (1 will be  aleaf node for sure) and in the nonSingleTOncase the parne will have only n  nodes . 
+
+
+	< parent : parentTagRef>
+}
+	content
+{tagName}
+
+{parentTag attrs}
+
+{parentTag} 
+
+
+but in this case ,  if sigleton tag design is choosed , then any  tag Node whihc is parent must be emoty like this 
+{parentTag} {parentTagName} 
+
+
+3. allow both 
+
+ 
+
+
+design choices to how to allow hierrarichal tags 
+
+	
+	if nested Tags (via structure) is used  , the parent attribute  if defined in tags will be ignored 
+	
+	if flat Tags (via atttributte) is used , then parent attribute must be defined, if not defined then  either raise a error or  take it as the root node or sibling node i.e child of global tag node (global tag is restricted to only one in a file)
+
+
+1. static parsing support  
+
+support  both 1 (via structure )  and 2 (via attributte) , but restrict the use to single , i mean let the user decide to select only one  per doc , thorough a attribute in the global tag 
+	
+
+	in this case the parsing is simpla and easy as the parsing will be done base on the global attributte defining the strucure used in the document 
+
+
+
+		
+
+2. DYnamic parsing support  
+
+allow  to be used both
+
+	although ,  this will be much more flexible , ie mean user can nested structures  when it s more convient and switch to flat tags when  the nested tags becomes too deep , or flat is more easier to implement .
+
+	 but deciding when to switch from nestedParsing to flatParsing will be difficult ,
+
+	 but  my idea is to implement  tha attribute that i discccussed in the point to be attribute of  section tags instead of global 
+
+	so ehenver going into the parsing type will be defined based on the defined attributte of the latest tag i,e teh tag that holds the 		cuurrent scope 
+ 
+	instead ogf this , if  there is a more better design please suggest me . 
+
+
+
+ lets say the  attribute name  to denote the structure i.e the susequent hierarichal tags structure , ie nested or flat ,  then there are two design choices :
+
+1. only global tag can have the attribute structure , in this the structure for the whole document is  one either nested or flat 
+
+
+2. or the  section tag can have the attributte structure, in this case when the structure is nested then 
+
+
+ 
+
+but if you see i do not need to decide between  the  2 different design choices that i mentioned to either suppport staic structure  parsing support or dynamic  structure parsing support as naturally dynamic structure support is already there as 
+
+
+has content |  has prnt  attributte | is nested | has child Tags | what to do     
+------------------------------------------------------------------------------------
+True        |    True               | True      | True           | error : violates singleton tag design  
+
+True        |    True               | True      | False          | child leaf node for the nested prnt tag, ignore prnt attr
+
+True        |    True               | False     | True           | error : violates singleton tag design  
+
+True        |    True               | False     | False          | child leaf node to the refferd prnt node,sibling order according to occurence in the doc   
+
+True        |    False              | True      | True           | error : violates singleton tag design 
+
+True        |    False              | True      | False          | child leaf node for the nested prnt tag 
+
+True        |    False              | False     | True           | error : violates singleton tag design  
+
+True        |    False              | False     | False          | sibling node to the root node, child of global node , lead as well
+
+False       |    True               | True      | True           | child node for the nested prnt tag, ignore prnt attr
+
+False       |    True               | True      | False          | child node for the nested prnt tag, ignore prnt attr
+
+False       |    True               | False     | True           |  
+
+False       |    True               | False     | False          | 
+
+False       |    False              | True      | True           |
+
+False       |    False              | True      | False          | 
+
+False       |    False              | False     | True           | 
+
+False       |    False              | False     | False          |
+ 
+
+
+
+
+
+
+
