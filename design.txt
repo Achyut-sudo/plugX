@@ -1,373 +1,518 @@
-FINAL  DESIGN  .plgx 
+DESIGN DOCUMENT 
 
 
-1. TAGS 
+EXTENSION : .plgx
 
-	FUNCTION :  DEFINES DIFFERENT SECTION OF THE DOCUMENT 
+plugX is a language designed to generate large dynamic documents using dynamically evaluated embedding called 'plug'. It supports modular content accession, rendering using 'contianers'. It also has  a robust error-handling mechanism. With built-in 'standard options' to enhance document content, it simplifies large document creation by utilizing reusable elements with dynamic modification based on requirements.
 
-	SYNTAX : 
-		{TAG_NAME
-			<KEY: Name>
-		}
-			section_data 
-		{ TAG_NAME}
-		
+
+
+1. EVALUATION ORDER KEYWORD 
+   ------------------------ 
+
+	STAGE 
+	-----
+
+		SYNTAX : SOME_OTHER_KEYWORD(s)@STAGE_VALUE or SOME_OTHER_KEYWORD@(STAGE_VALUE)
  
-	are of to types 
-		global :  only single per file 
-		section :  can be nested 
-
-2. TAG ATTRIBUTTE
-
-	FUNCTION :METADATA ,  TO SET VALUES THAT MIGHT BE REQUIRED TO RENDER THE TAG CONTENT   
+		IT DEFINES THE STAGE OF EXECUTION OR REFERNCES OF OTHER KEYWORDS 
 		
-	SYNTAX : 
-		<ATTRIBUTENAME :  VALUE>
-
-	id if defined must be unique throughout the file 
-	key can have a mapped function in the parser , which  overrides the value of the key , after it has been plugged if the value is aplugin       
-
-
-	Reserved tags :
-
-
-3. PLUGIN  :
-
-	FUNCTION : PLACEHOLDER OR TEMPELATE TO REPLACE WITH VALUE FROM DIFFERNET SOURCES 
-
-
-	SYNTAX : 
-		 [ACCESSOR : SCOPE : ACCESS_TYPE : ACESSOR_PARAMS ]
-
-	
-	ACCESSOR  :
-		
-		FUNCTION : NAME OF THE ACCESSOR ,  LIKE KEY IN CASE OF CONFIG PLUGIN OE ENVIRONMENT VARIABLE PLUGIN OR NAME OF THE ATTRIBUTTE OR METHOD IN CASE OF ATTRIBUTTE OR METHOD PLUGIN 
-		
-
-	SCOPE :
-		
-		FUNCTION : DEFINES THE SCOPE OF THE ACCESSOR
-
-		VALID VALUES  :
+		VALID VALUES :
 			
-			MAIN : THE PARSER 
-			PRNT : TAG HIERARICHAL ACCESSION , REFFERS TO THE PARENT TAG OF THE CURRENT SECTION 
-			CRNT : TAG HIERARICHAL ACCESSION , REFFERS TO THE CURRENT TAG
-			SIBL@ORDER_INDEX : TAG HIERARICHAL ACCESSION , REFFERS TO THE SIBLING TAG AT INDEX ORDER_INDEX 
-			CHILD@ORDER_INDEX : TAG HIERARICHAL ACESSION , REFFERS TO THE CHILD  TAG OF THE CURRENT TAG 
-			GLBL : TAG DIRECT ACCESSION , DIRECT ACCESSION TO THE GLOBAL TAG 		
-			TAG@TAG_ID : TAG DIRECT ACCESSION , DIRECT ACCESSION TO ATAG , BY THE ID IF THE ID HAS BEEN GIVEN TO ANY TAG, ANDD ID MUST BE UNIQUE THROUGHPOUT THE FILE 
-			ENV@USR/SYS : ENVIRONMENT VARIABLES USR: FOR USER VARIABLES , SYS: FOR SYS VARIABLES 
-			CONFIG@CONFIG_REF : CONFIGURATION ACCESSION , FOR READING VALUES FROM A LOCAL CONFIG  FILE 
+			PRE : STATES THAT THE EXECUTION  OR REFERENCES IS MADE BEFORE  THE REFERRED KEYWORD IS EVALUATED 
+			POST  : STATES THAT THE EXECUTION OR REFERENCES IS MADE AFTER TJE REFERRED KEYWORD IS EVALUATED 
+
+
+
+
+2. CONTAINER ACCESION CONTROL KEYWORDS 
+   ----------------------------------
+
+
+	ORDER_INDEX 
+	-----------
+		
+		SYNATX : SOME_OTHER_KEYWORD@ORDER_INDEX_VALUE or SOME_OTHER_KEYWORD@(ORDER_INDEX_VALUE) 		
+		
+		IT DEFINES THE INDEX OF THE REFFERED KEYWORD IN  CONTAINER SCOPE OF THE PARENT OF THE REFERRED CONTAINER 	 
+
+		VALID VALUES : INDEX (INTEGER) OF THE INTENDED CONTIANER TAG , INDEX IN ITS PARENT SCOPE 
+
+		
+3. ACCESION KEYWORDS 
+   -----------------
 	
+	1. CONTAINER ACCESION KEYWORDS 
+	   ---------------------------
 
-		SCOPES LIKE : PRNT, CRNT , SIBL, CHILD, TAG  SUPPORTS HEIRARICHAL ACCESION ,I.E. CAN BE CHAINED 		
+		PARENT
+		------
 
-	ACCESS_TYPE :
+			SYNTAX : PARENT@STAGE_VALUE  or PARENT@(STAGE_VALUE)
 
-		FUNCTION  : DEFINES THE TYPE OF ACCESSION 
+			IN NESTED TAG CONTAINER TAG , THIS CONTAINER ACCESSOR KEYWORD  REFERS TO THE PARENT I.E.  CONTAINER TAG THAT WRAPS 
+			AROUND THE CURRENT CONTAINER TAG 
+
+		
+		SELF 
+		----
+			SYNTAX : SELF 
+		
+			REFFERS TO THE SAME CONTAINER TAG, WHICH IS BEING EVALUATED . 
+
+		
+		SIBLING  
+		-------
+			
+			SYNTAX : SIBLING@ORDER_INDEX_VALUE@STAGE_VALUE  OR SIBLING@(ORDER_INDEX_VALUE,STAGE_VALUE)
+	 
+			REFFERS TO THE ORDER_INDEX_VALUEth SIBLING, THE ORDER_INDEX_VALUEth CHILD OF THE PARENT OF THE CURRENT CONTIANER TAG. 
+
+		
+		CHILD 
+		------
+			SYNTAX : CHILD@ORDER_INDEX_VALUE@STAGE_VALUE  OR CHILD@(ORDER_INDEX_VALUE,STAGE_VALUE)
+
+			REFFERS TO THE ORDER_INDEX_VALUEth CHILD CONTAINER TAG OF THE CURRENT CONTAINER TAG.
+
+
+		GLOBAL
+		------
+			
+			SYNTAX : GLOBAL 
+			
+			REFFERS TO THE GLOBAL CONTAINER_TAG 
+
+			
+		TAG 
+		---
+			SYNTAX : TAG@TAG_ID_VALUE@STAGE_VALUE OR CHILD@(TAG_ID_VALUE,STAGE_VALUE)
+			
+			REFFERS TO A CONTAINER TAG DIRECTLY BY THE PROVIDED ATTRIBUTE id  TO THE TAG. 
+	 
+
+	2. EXTERNAL ACCESION KEYWORD
+	   ------------------------- 
+
+		ENV@USR 
+		-------
+			SYNTAX : ENV@USR OR ENV@(USR) 
+			
+			USED FOR ACCESING DATA FROM THE USER ENVIRONMENT VARIABLES 
+
+		ENV@SYS 
+		-------
+			SYNTAX : ENV@SYS OR ENV@(SYS)
+		
+			USED FOR ACCESSING DATA FROM THE SYSTEM ENVIRONMENT VARIABLES 
+
+		CONFIG@CONFIG_REF 
+		----------------
+
+			SYNTAX : CONFIG@CONFIG_REF 
+			
+			USED FOR ACCESING  THE CONFIG FILE INCLUDED IN THE DOCUMENT THROUGH 'CONFIG' ATTRIBUTE IN GLOBAL CONTAINER TAG
+
+		IMPORT@IMPORT_ID 
+		----------------
+
+			SYNTAX : IMPORT@IMPORT_ID
+			
+			USED FOR ACCESING OTHER .plgX FILE INCLUDED IN THE DOCUMENT THROUGH 'IMPORT' ATTRIBUTE IN GLOBAL CONTAINER TAG
+
+
+
+
+	3. INTERNAL ACCESSION KEYWORD 
+	   --------------------------
+
+		BUILTIN
+		------- 
+			SYNTAX : BUILTIN 
+			
+			USED FOR ACCESSION OF BUILTIN ATTRIBUTE AND METHODS, CALLED STANDARD OPTIONS 
+
+
+
+4. ACCESSION KEYWORD CHAINING
+  ---------------------------
+	
+	   CONTAINER ACCESSION KEYWORD CHAINING 
+	   ------------------------------------
+
+		ALL CONTAINER ACCESSION  KEYWORDS ,EXCEPT GLOBAL KEYWORD CAN BE CHAINED, BUT STAGE EVALUTION ORDER KEYWORD MUST BE DEFINED 
+		ONLY
+		ONCE AT THE END , WHILE THE CONTAINER ACCESSION CONTROL KEYWORD ORDER_INDEX CAN BE DEFINED AS REQUIRED
+		
+		FOR EXAMPLE : PARENT.PARENT.SIBLING@3@PRE -> THIRD SIBLING OF THE GRANDPARENT OF  THE CURRENT CONTAINER WITH  EVAULAUTION 
+			      STAGE PRE
+
+	   
+	   EXTERNAL ACCESION KEYWORD CHAINING
+	   ----------------------------------	 
+
+		THE IMPORT EXTENAL ACCESION KEYWORD CAN BE CHAINED WITH CONTAINER  ACCESION KEYWORDS AS DESCRIBED ABOVE . 
+ 
+
+5.  PLUG
+    ---- 
+
+	USAGE : TO INSERT DATA DYNAMICLLAY FROM A FUNCTION CALL OR STATIC VALUE 
+	
+	SYNTAX  : [ACCESSOR_NAME : ACCESOR_SCOPE : ACESSOR_TYPE : ACCESSOR_PARAMS ]
+
+
+	ACCESSOR_NAME 
+	-------------
+		
+		NAME OF THE ACCESSOR LIKE NAME OF  A  KEY , NAME OF A METHOD OR  ATTRIBUTE
+ 
+	ACCESSOR_SCOPE 
+	--------------
+
+
+		SCOPE  OF THE ACCESSOR 
+
 
 		VALID VALUES :
 			
-			COMPUTED : ACCESSION TYPE , DENOTES THAT THE ACCESSOR IS  METHOD
-			PROPERTY : ACCESSION TYPE , DENOTES THAT THE ACCESSOR IS STATIC VALUE , DOES NOT NEED TO BE COMPUTED 
-
-	  
-	ACESSOR_PARAMS :
 		
-		FUNCTION : PARAMETERS FOR THE ACESSOR IF THE  ACCESS_TYPE IS COMPUTED 
+			+-------------------------------------+-------------------------------------------------------------------------+
+ 			| VALUE	                              |        DESCRIPTION                                                      |
+			+-------------------------------------+-------------------------------------------------------------------------+
+                        | BUILTIN                             |  THE PARSER , BUILTIN ATTRIBUTE AND METHODS,AVAILABE AS STANDARD OPTION |   
+			| PARENT@STAGE                        |  FLAT/DIRECT TAG ACCESSION , PARENT TAG                                 |
+			| SELF                                |  NESTED TAG ACESSION ,  SELF                                            |  
+			| SIBLING@ORDER_INDEX@STAGE           |  BESTED TAG ACCESION , SIBLING TAG@DEFAULT = 1                          |
+			|	OR                            |                                                                         |
+			| SIBLING@(ORDER_INDEX,STAGE)         |                                                                         |
+			| CHILD@ORDER_INDEX@STAGE             |  NESTED TAG ACCESION , CHILD TAG OF THE CURREBT TAG                     |
+			|	OR                            |                                                                         |
+			| CHILD@(ORDER_INDEX,STAGE)           |                                                                         |
+                        | GLOBAL                              |  FLAT/DIRECT TAG ACCESION , GLOBAL TAG                                  |
+			| TAG@TAG_ID@STAGE                    |  FLAT/DIRECT TAG ACCESION , ANY TAG WITHIN THE DOC WITH ID AS TAG_ID    |
+			|	OR                            |                                                                         |
+			| TAG@(ORDER_INDEX,STAGE)             |                                                                         |
+			| ENV@USR                             |  USER ENVRIONMENT VARIABLES                                             |
+			| ENV@SYS                             |  SYSTEM ENVIRONMENT VAORABLES                                           |
+			| CONFIG@CONFIG_REF                   |  CONFIG FILE ACCESSION , FOR READING VALUES FROM A LOCAL CONFI FILE     | 
+			| IMPORT@IMPORT_REF                   |  IMPORTED  FILE ACCESSION , FOR ACCESSING  ELEMENTS OF THE IMPORT .plgX |
+			|                                     |  FILES                                                                  |
+			+-------------------------------------+-------------------------------------------------------------------------+
 
-	
-
-	VALID SCOPE ACCESS_TYPE PAIR 
-
-		MAIN : BOTH ARE VALID 
-		OTHER THAN MAIN : PROPERTY , WILL BE OVERRIDDEN BY THE PARSER IF  EMPTY 
 
 
+	ACCESSOR_TYPE
+	------------- 
 
-5. COMMENTS 
+		TYPE OF ACCESSION ,  I.E IN TERMS OF REQUIREMENT OF EXECTUION, SINCE THE ACCESSOR CAN ALSO REFER TO AMETHOS TOO, HENCE 
+                ACCESSOR_TYPE IS USED TO EXPLICITLY DISTINGUID BETWEEN A METHOD ACCESSOR OR A ATTRIBUTE/KEY ACCESSOR 
 
-
-	INLINE :
 		
-		SYNTAX :
+		VALID VALUES :
 			
-			3INLINE COMMENT 
-
-	MULTILINE  :
-		SYNTAX : 
-
-			/* LINE1 
-			  LINE 2 
-			*/ 
-
-
-
-
-
-
-
-
-the current structure of any tag is  {tagname attrs } content to render {tagname} 
-
-
-
-along with many reserved and preddefined attributtes for a tag , i want to a have hidden attribute which can not be defined thoufh <key : value> way as other attributtes defined in the tag opening , but its the 'content ot render' defined between the tag opening and closing 
-
-
-
-there are two  design choices  about a parent tag 
-
-1. singleton , only content or childs 
-
-parent tag should not have any content , i.e any tag can not have structure like this :
-
-{tag1_name
-	attr 1 
-	attr2 
-}
-
-some content 
-
-	{tag1_Name 
-		attr1 
-	}
-		...
-	{ tagName}
-{tag1_name} 
-
-
-in this way the doc will be somewhat less cluttered and  the content that is supposed to be content of the parent   ccan also be replicated by defining  the  child node  with  the same node , in this way  only the leaf nodes will have values to render  
-
-
-2. nonSingleton , can have both content or  childs  
-
-can have content and a child tag , but then the content of the  parent node must be  of highest priority in terms of content rendering 
-i.e tag can have structure like this :
-
-{tag names
-	attr 1 
-	attr2 
-}
-
-some content 
-
-	{tagName 
-		attr1 
-	}
-		...
-	{ tagName}
-{tagname} 
-
-
- but the  doc can be cluttered, in this way in the  graph the parser builds , the nonleaf nodes can also have content to render  
-
-
-
-if singleton is used then then to achiecve the nonSingleTon behaviour in terms of usage of a tags and content in the doc needs a slight effort , but nonSingleton is used then although this effort is reduced the document might look cluttered, and hybrid  does not sense , as the effort in creating the doc is minimal as 
-
-adding a  contnet to any tag in singleTon mode can be done thorgh this 
 	
-	{Tag 
-		attr
-	} 
-		{tag } pcontent that that was supposed to be for the parent tag {tag}
+			+---------------------+-------------------------------------------------------------------------------------------+ 
+                        | VALUES              | DESCRIPTION                                                                               |
+                        +---------------------+-------------------------------------------------------------------------------------------+
+                        | COMPUTED            | ACCESSION TYPE , DENOTES THAT THE ACCESSOR IS  METHOD                                     |
+			| PROPERTY            | ACCESSION TYPE , DENOTES THAT THE ACCESSOR IS STATIC VALUE , DOES NOT NEED TO BE COMPUTED |
+                        +---------------------+-------------------------------------------------------------------------------------------+
+
+
+	ACCESSOR_PARAMS
+	--------------- 
 		
-		{tag 
-			attr}
-			content or new child
-		{tag}
-		..
-	{tag}
-
-
-
-while adding any tag in nonSingleTon mode :
-
-	{Tag 
-		attr
-	} 
-		content that that was supposed to be for the parent tag
-		{tag 
-			attr}
-			content or new child
-		{tag}
-		..
-	{tag}
-
-the  diffrence in parser tree will be  that the parent node will have n + 1 childs (1 will be  aleaf node for sure) and in the nonSingleTOncase the parne will have only n  nodes . 
-
-------------USE SINGLE TON -------------------------------
-
-
-
-
-
-
-
-
-design choices relalted to achieving hierarical   Tags 
-
-
-1. via structure , only allow nested tags , like  : 
-
-{ tagName  }
-	{tagName}
-		{tagName}
-		{tagName}
-	{tagName}
-	{tagName}
-		content
-	{tagName}
-	...
-{tagName}
-
-
-
-2. via attributte , do not allow  tags, but link parent cand child tags thorugh parent and child attributte 
-
-
-{tagName if singleton is used then then to achiecve the nonSingleTon behaviour in terms of usage of a tags and content in the doc needs a slight effort , but nonSingleton is used then although this effort is reduced the document might look cluttered, and hybrid  does not sense , as the effort in creating the doc is minimal as 
-
-adding a  contnet to any tag in singleTon mode can be done thorgh this 
-	
-	{Tag 
-		attr
-	} 
-		{tag } pcontent that that was supposed to be for the parent tag {tag}
+		+------------------+-----------------------------------------------------------------------+
+                |  VALUE           |   SYNTAX                                                              |
+		+------------------+-----------------------------------------------------------------------+		      
+                |  MULTI           | (POSITIONAL_VAL1, POSITIONAL_VAL2, KEYWORD1=VAL3,KEYWORD2=VAL4)       | 
+		|  SINGLE          | (POSTIONAL_VAL1) OR POSTIONAL_VAL1 OR (KEYWORD1=VAL1) OR KEYWORD1=VAL1|
+		+------------------+-----------------------------------------------------------------------+ 
 		
-		{tag 
-			attr}
-			content or new child
-		{tag}
-		..
-	{tag}
-
-
-
-while adding any tag in nonSingleTon mode :
-
-	{Tag 
-		attr
-	} 
-		content that that was supposed to be for the parent tag
-		{tag 
-			attr}
-			content or new child
-		{tag}
-		..
-	{tag}
-
-the  diffrence in parser tree will be  that the parent node will have n + 1 childs (1 will be  aleaf node for sure) and in the nonSingleTOncase the parne will have only n  nodes . 
-
-
-	< parent : parentTagRef>
-}
-	content
-{tagName}
-
-{parentTag attrs}
-
-{parentTag} 
-
-
-but in this case ,  if sigleton tag design is choosed , then any  tag Node whihc is parent must be emoty like this 
-{parentTag} {parentTagName} 
-
-
-3. allow both 
-
- 
-
-
-design choices to how to allow hierrarichal tags 
-
-	
-	if nested Tags (via structure) is used  , the parent attribute  if defined in tags will be ignored 
-	
-	if flat Tags (via atttributte) is used , then parent attribute must be defined, if not defined then  either raise a error or  take it as the root node or sibling node i.e child of global tag node (global tag is restricted to only one in a file)
-
-
-1. static parsing support  
-
-support  both 1 (via structure )  and 2 (via attributte) , but restrict the use to single , i mean let the user decide to select only one  per doc , thorough a attribute in the global tag 
-	
-
-	in this case the parsing is simpla and easy as the parsing will be done base on the global attributte defining the strucure used in the document 
-
-
 
 		
 
-2. DYnamic parsing support  
+6. CONTAINER/CONTAINER  TAGS 
+   ---------------
+	
 
-allow  to be used both
+	SYNTAX  : 
+		{TAG_NAME
+		
+			< ATTRIBUTE_KEY_1 : ATT`RIBUTE_VALUE_1>
+			< ATTRIBUTE_KEY_2 : ATT`RIBUTE_VALUE_2>
+			...
+		}
 
-	although ,  this will be much more flexible , ie mean user can nested structures  when it s more convient and switch to flat tags when  the nested tags becomes too deep , or flat is more easier to implement .
+			content or chjild tags 
+		
+		{!TAG_NAME}
 
-	 but deciding when to switch from nestedParsing to flatParsing will be difficult ,
-
-	 but  my idea is to implement  tha attribute that i discccussed in the point to be attribute of  section tags instead of global 
-
-	so ehenver going into the parsing type will be defined based on the defined attributte of the latest tag i,e teh tag that holds the 		cuurrent scope 
- 
-	instead ogf this , if  there is a more better design please suggest me . 
-
-
-
- lets say the  attribute name  to denote the structure i.e the susequent hierarichal tags structure , ie nested or flat ,  then there are two design choices :
-
-1. only global tag can have the attribute structure , in this the structure for the whole document is  one either nested or flat 
-
-
-2. or the  section tag can have the attributte structure, in this case when the structure is nested then 
+	NOTE : ALL CONTAINER TAG ARE SINGLETONS , I.E. EITHER THEY CAN HAVE TEXT CONTENT  OR CHILD CONTAINERS OR NOTHING BUT NOT BOTH
+	       TEXT CONTENT AS WELL AS CHILD CONTAINERS 
 
 
- 
-
-but if you see i do not need to decide between  the  2 different design choices that i mentioned to either suppport staic structure  parsing support or dynamic  structure parsing support as naturally dynamic structure support is already there as 
+	GENERAL DESCRIPTION OF  ALL SUPPORTED CONTAINER TAGS 
 
 
-has content |  has prnt  attributte | is nested | has child Tags | what to do     
-------------------------------------------------------------------------------------
-True        |    True               | True      | True           | error : violates singleton tag design  
-
-True        |    True               | True      | False          | child leaf node for the nested prnt tag, ignore prnt attr
-
-True        |    True               | False     | True           | error : violates singleton tag design  
-
-True        |    True               | False     | False          | child leaf node to the refferd prnt node,sibling order according to occurence in the doc   
-
-True        |    False              | True      | True           | error : violates singleton tag design 
-
-True        |    False              | True      | False          | child leaf node for the nested prnt tag 
-
-True        |    False              | False     | True           | error : violates singleton tag design  
-
-True        |    False              | False     | False          | sibling node to the root node, child of global node , lead as well
-
-False       |    True               | True      | True           | child node for the nested prnt tag, ignore prnt attr
-
-False       |    True               | True      | False          | child node for the nested prnt tag, ignore prnt attr
-
-False       |    True               | False     | True           |  
-
-False       |    True               | False     | False          | 
-
-False       |    False              | True      | True           |
-
-False       |    False              | True      | False          | 
-
-False       |    False              | False     | True           | 
-
-False       |    False              | False     | False          |
- 
+	+-----------------------+----------------------------+----------------------------------------------------------------------------+ 
+	| TAG NAME              | CONTAINS                   |                                                                            |
+	+-----------------------+----------------------------+----------------------------------------------------------------------------+
+	|  GLOBAL               | MUST NOT HOLD ANYTHING     |   FOR DEFINING GLOABL ATTRIBUTES APPLICABLE  THROUGHOUT THE DOCUMENT ,     |
+	|			|		             |   ONLY ONE ALLOWED PER DOCUMENT,  BEGINING OF THE FILE , ONLY A CONTAINER  | 
+	|			|		             |   TO HOLD  THE GLOBAL ATTRIBUTES FOR THE WHOLE DOCUMENT                    |
+        |  SECTION              | TEXT CONTENT , CHILD TAGS  |   CONTAINER TO HOLD THE ACTUAL CONTENT OF THE DOCUMENT TO BE RENDERED      |
+        |                       | LIKE SECTION, TABLE , ROW  |   OR CHILD TAGS                                                            |
+        |                       | CELL TAGS                  |                                                                            |
+        |  TABLE                | TEXT CONTENT , CHILD TAGS  |   CONTAINER TAG TO RENDER TABLES                                           |
+        |                       | LIKE SECTION , TABLE , ROW |                                                                            | 
+        |                       | CELL TAGS                  |                                                                            |
+        |  ROW                  | TEXT CONTENT , CHILD TAGS  |   CONTAINER TAG TO RENDER ROWS OF A TABLE, IF USED INSiDE ANY OTHER        |
+        |                       | LIKE SECTION , TABLE , ROW |   CONTAINER TAG OTHER THAN TABLE  LIKE SECTION , THEN THE CONTIANED        | 
+        |                       | CELL TAGS                  |   ELEMNTS WILL BE RENDERED  SIBLE ROW WITH A DEFAULT SEPARATOR             |
+        |  CELL                 | TEXT CONTENT , CHILD TAGS  |   CONTAINER TAG TO RENDER CELL OF A TABLE ROW , IF USED INSiDE ANY OTHER   |
+        |                       | LIKE SECTION , TABLE , ROW |   CONTAINER TAG OTHER THAN ROW  LIKE SECTION , THEN THE CONTIANED          | 
+        |                       | CELL TAGS                  |   ELEMNTS WILL BE AUTO-WRAPPED INSIDE A ROW TAG                            |
+        | INDEX                 | MUST NOT HOLD ANYTHING     |   FOR RENDERING TABLE OF CONTENT/ INDEX                                    |
+	+-----------------------+----------------------------+----------------------------------------------------------------------------+
 
 
 
+	GLOBAL 
+	------ 
 
+		USAGE : FOR DEFINEING GLOBAL  VALUES THAT  MAY . MAY NOT OVERRIDDEN BY OTHER CONTAINERS
+	
+		NOTE : NO CONTAINER ACCCESION , ONLY EXTERNAL AND INTERNAL ACCESSION 
+	
+		BEHAVIOUR ON CONTENT
+		--------------------
+			ERROR  
+		
+		BEHAVIOUR ON CHILD TAGS 
+		------------------------ 
+
+			+--------------------+--------------------------------------------------------------------------------------------+
+			| CONTAINER TAG NAME | BEHAVIOUR                                                                                  |
+			+--------------------+--------------------------------------------------------------------------------------------+
+			| GLOBAL             | ERROR                                                                                      |
+			| SECTION TAG        | ERROR                                                                                      |
+			| INDEX              | ERROR                                                                                      |
+			| TABLE              | ERROR                                                                                      |
+			| ROW                | ERROR                                                                                      |
+			| CELL               | ERROR                                                                                      |
+			+--------------------+--------------------------------------------------------------------------------------------+
+
+
+
+
+	SECTION
+	-------
+		
+		USAGE : USED FOR ACTUAL CONTAINER RENDERING TEXT 
+		
+		
+		BEHAVIOUR ON CONTENT 
+		-------------------- 
+			THE CONTNET WILL BE RENDERED
+
+		BEHAVIOUR ON CHILD TAGS 
+		------------------------ 
+
+			+--------------------+--------------------------------------------------------------------------------------------+
+			| CONTAINER TAG NAME | BEHAVIOUR                                                                                  |
+			+--------------------+--------------------------------------------------------------------------------------------+
+			| GLOBAL             | ERROR                                                                                      |
+			| SECTION TAG        | NORMAL , THE CONTAINER WILL BE RENDERD                                                     |
+			| INDEX              | ERROR                                                                                      |
+			| TABLE              | NORMAL, THE CONTAINER WILL BE RENDERED                                                     |
+			| ROW                | WILL BE AUTO  WRAPPED IN A TABLE CONTAINER TAG                                             |
+			| CELL               | WILL BE AUTO WRAPPED IN A ROW CONTAINER TAG , WHICHC AGAIN WILL BE AUTO WRAPPED IN TABLE   |
+			|                    |  CONTAINER                                                                                 |
+			+--------------------+--------------------------------------------------------------------------------------------+
+
+
+
+	TABLE 
+	-----
+
+		USAGE : USED TO RENDER TABLES 
+	
+		BEHAVIOUR ON CONTENT 
+		--------------------
+			AUTO WRRAPED TO CELL , AUTOWRAPPED TO ROW CONTAINER 
+
+		BEHAVIOUR ON CHILD TAGS 
+		------------------------ 
+
+			+--------------------+--------------------------------------------------------------------------------------------+
+			| CONTAINER TAG NAME | BEHAVIOUR                                                                                  |
+			+--------------------+--------------------------------------------------------------------------------------------+
+			| GLOBAL             | ERROR                                                                                      |
+			| SECTION TAG        | AUTO WRAPPED TO CELL CONTAINER, WHICH ITSELF WILL BE AUTOWRAPPED TO ROW CONTAINER          | 
+			| INDEX              | ERROR                                                                                      |
+			| TABLE              | ERROR                                                                                      |
+			| ROW                | NORMAL, THE CONTAINER WILL BE RENDERED                                                     |
+			| CELL               | WILL BE AUTO WRAPPED IN A ROW CONTAINER TAG                                                |
+			+--------------------+--------------------------------------------------------------------------------------------+
+	
+	ROW 
+	---
+
+		USAGE : USED TO RENDER TABLE ROW 
+
+		BEHAVIOUR ON CONTENT 
+		-------------------
+			AUTOWRRAPED TO CELL CONTAINER 
+
+		BEHAVIOUR ON CHILD TAGS 
+		------------------------ 
+
+			+--------------------+--------------------------------------------------------------------------------------------+
+			| CONTAINER TAG NAME | BEHAVIOUR                                                                                  |
+			+--------------------+--------------------------------------------------------------------------------------------+
+			| GLOBAL             | ERROR                                                                                      |
+			| SECTION TAG        | AUTOWRAPPED TO CELL CONTAINER                                                              | 
+			| INDEX              | ERROR                                                                                      |
+			| TABLE              | NORMAL, THE CONTAINER WILL BE RENDERED                                                     |
+			| ROW                | ERROR                                                                                      |
+			| CELL               | NORMAL, THE CONTAINER WILL BE RENDERED                                                     |
+			+--------------------+--------------------------------------------------------------------------------------------+
+
+
+	CELL  
+	-----
+
+		USAGE : USED TO RENDER TABLES 
+
+		BEHAVIOUR ON CONTENT  
+		--------------------
+			NORMAL , THE CONTENT WILL BE RENDERED 
+
+
+		BEHAVIOUR ON CHILD TAGS 
+		------------------------ 
+
+			+--------------------+--------------------------------------------------------------------------------------------+
+			| CONTAINER TAG NAME | BEHAVIOUR                                                                                  |
+			+--------------------+--------------------------------------------------------------------------------------------+
+			| GLOBAL             | ERROR                                                                                      |
+			| SECTION TAG        | NORMAL, THE CONTINAER WILL BE RENDERED                                                     | 
+			| INDEX              | ERROR                                                                                      |
+			| TABLE              | NORMAL, THE CONTAINER WILL BE RENDERED                                                     |
+			| ROW                | AUTO WRRAPED TO TABLE CONTAINER                                                            |
+			| CELL               | ERROR                                                                                      |
+			+--------------------+--------------------------------------------------------------------------------------------+
+
+	INDEX 
+	----- 
+
+		USAGE : FOR CREATING TABLE OF CONTENT/ INDEX 
+		
+		BEHAVIOUR ON CONTENT
+		--------------------
+			ERROR  
+		
+		BEHAVIOUR ON CHILD TAGS 
+		------------------------ 
+
+			+--------------------+--------------------------------------------------------------------------------------------+
+			| CONTAINER TAG NAME | BEHAVIOUR                                                                                  |
+			+--------------------+--------------------------------------------------------------------------------------------+
+			| GLOBAL             | ERROR                                                                                      |
+			| SECTION TAG        | ERROR                                                                                      |
+			| INDEX              | ERROR                                                                                      |
+			| TABLE              | ERROR                                                                                      |
+			| ROW                | ERROR                                                                                      |
+			| CELL               | ERROR                                                                                      |
+			+--------------------+--------------------------------------------------------------------------------------------+
+
+
+
+7. CONTAINER TAG ATTRIBUTE 
+   -----------------------
+
+
+	
+
+	GENERAL DESCRIPTION OF THE CONTAINER TAG  ATTRIBUTES 
+
+		
+		CUSTOM ATTIBUTES CAN ALSO BE DEFINED IN EACH CONTAINER TAG WHIHC THEN CAN BE LATER ON USED FOR REFERRENCES IN OTHER TAGS OR
+		CAN ALSO BE I USED IN THE CONTAINER TAG ITSELF. BUT SOME ATTRIBUTES ARE RTESERVED  ATTRIBUTES WHICH ARE BUITLIN FOR SPECIFI
+		PURPOSES 
+
+
+
+	RESERVED DOCUMENT ACCESSIBLE ATTRIBUTES 
+	---------------------------------------
+		
+                +------------------------+----------------------+--------------------------------------------------------------------------+
+                | ATTRIBUTE              | APPLICABLE TAGS      | DESCRIPTION                                                              |
+                +------------------------+----------------------+--------------------------------------------------------------------------+
+		| CONFIG@CONFIG_ID       | ONLY GLOBAL          | USED TO LOAD LOCAL CONFIG FILES, CONFIG_ID MUST BE UNIQUE, IF NOT        |
+		|                        |                      | DEFINED THE ORDER OF OCCURENCE IN THE DOCUMENT IS USED AS THE CONFIG_ID  |
+		| CONTENT_MODIFIER@STAGE | ALL, EXCEPT GLOBAL   | USED TO DEFINE THE BUILTIN MODIFIER FUNCTION THAT NEEDS TO BE APPLIED TO |
+                | (STAGE : PRE/POST)     |                      | THE CONTENT AT DIFFERENT STAGES , PRE : BEFORE EVALUATION                |
+		|                        |                      | POST : AFTER EVALUATION                                                  |
+                | DEFAULT_STAGE          | ALL                  | DEFINES THE DEFAULT VALUE FOR THE STAGE EVALUATION ORDER KEYWORD         |
+		| IMPORT@IMPORT_ID       | ONLY GLOBAL          | USED TO INCLUDE OTHER plugX FILES, INCLUDE_ID MUST BE UNIQUE, IF NOT     |
+		|                        |                      | DEFINED THE  ORDER OF OCCURENCE IN THE DOCUMENT IS USED AS THE INCLUDE_ID|
+		| ID                     | ALL, EXCEPT GLOBAL   | MUST BE UNIQUE THROUGHOUT THE DOCUMENT, USED FOR TAG ACCESSION           |
+		| INDENT                 | ALL                  | USED TO DEFINE THE INDENT OF THE CHILD CONTAINER TAGS AND INDENT         |
+		|                        |                      | CHARACTER                                                                |
+		| INDEXING               | GLOBAL               | USED TO DEFINE THE INDEXING START INDEX EITHER 0 OR 1,I.E IN KEYWORDS    |
+		|                        |                      | WHEREEVER THE ORDER_INDEX IS PASSED, THE MINIMUM ORDER_INDEX WILL BE     |
+		| 			 |			| BE DEFINED BY THIS ATTRIBUTE                                             |
+		| INDEX_LAYOUT           | INDEX, GLOBAL        | DEFINES THE LAYOUT OF THE INDEX TABLE                                    |
+		| INSEX_SERIAL           | INDEX,GLOBAL         | DEFINES SERIALING TYPE OF THE INDEX TABLE                                |
+		| MAX_LINE_SIZE          | ALL                  | DEFINES THE MAXIMUM SIZE OF EACH LINE IN THE CONTENT, LINE HERE DOESNOT  |
+		|                        |                      | MEANS A SENTENCE OR STATEMENT INSIDE A TABLE , BUT THE ACTUAL EVALUATED  |
+		|                        |                      | STRING OF CHARACTERS PER FILE LINE                                       |
+		| MARGINS                | ALL                  | USED TO DEFINE THE MARGINS BETWEEN THE CHILD CONTAINER TAGS              |
+		| MODE                   | ALL, EXCEPT GLOBAL   | USED FOR CONDITIONAL RENDERING AND EVALUATION                            |
+		| ON_ERROR@ERROR_TYPE    | ALL                  | ERROR FALLBACK ATTRIBUTE ,USES TO DEFINE ACTION TO TAKE ON INCASE IF AN  |
+                |                        |                      | ERROR OF ERROR_TYPE HAPPENS, ERROR TYPES ARE DEFINED STANDARD OPTIONS    |
+		|                        |                      | AND VALUEE IS TOO A DEFINED STANDARD OPTION                              |
+		| PARENT                 | ALL, EXCEPT GLOBAL   | USED FOR FLAT/DIRECT TAG LINKAGE, IGNORED IF THE TAG IS NESTED WITHIN    |
+		| PADDINGS               | ALL                  | DEFINES THE PADDING FOR THE CONTENT OF A SECTION                         |
+		| PADDINGS               | ALL                  | DEFINES THE PADDING FOR THE CONTENT OF A SECTION                         |
+		| TABLE_LAYOUT           | ALL                  | DEFINES THE LAYOUT OF THE TABLE                                          |
+		| TITLE                  | ALL, EXCEPT GLOBAL   | TITLE FOR THE TAG                                                        |
+		| TITLE_MODIFIER@STAGE   | ALL, EXCEPT GLOBAL   | USED TO DEFINE THE BUILTIN MODIFIER FUNCTION  THAT NEEDS TO BE APPLIED TO|
+		| (STAGE : PRE/POST)     |                      | THE CONTENT AT DIFFERENT STAGES , PRE: BEFORE EVALUATION ,               |
+		|                        |                      | POST: AFTER EVALUATION                                                   |
+		+------------------------+----------------------+--------------------------------------------------------------------------+
+
+
+	RESERVED DOCUMENT INACCESSIBLE ATTRIBUTE 
+	----------------------------------------
+
+		
+                +------------------------+----------------------+--------------------------------------------------------------------------+
+                | ATTRIBUTE              | APPLICABLE TAGS      | DESCRIPTION                                                              |
+                +------------------------+----------------------+--------------------------------------------------------------------------+
+		| CONTENT                | NONE                 | INTENAL ATTRIBUTE , BUT ACCESSIBLE AS ACCESSOR NAME IN PLUGS TO ACCESS   |
+		|                        |                      | CONTENT OF A CONTAINER THOURGH SETTING ACCESSION SCOPE TO A  CONTAINER   |
+		|                        |                      | ACCESSION KEYWORD                                                        |
+		| START_LINE             | NONE                 | INTENAL ATTRIBUTE , BUT ACCESSIBLE AS ACCESSOR NAME IN PLUGS TO ACCESS   |
+		|                        |                      | CONTENT OF A CONTAINER THOURGH SETTING ACCESSION SCOPE TO A  CONTAINER   |
+		|                        |                      | ACCESSION KEYWORD                                                        |
+		| CONTENT_WIDTH          | NONE                 | INTENAL ATTRIBUTE , BUT ACCESSIBLE AS ACCESSOR NAME IN PLUGS TO ACCESS   |
+		|                        |                      | CONTENT OF A CONTAINER THOURGH SETTING ACCESSION SCOPE TO A  CONTAINER   |
+		|                        |                      | ACCESSION KEYWORD                                                    ccc |
+		| CONTENT_DEPTH          | NONE                 | INTENAL ATTRIBUTE , BUT ACCESSIBLE AS ACCESSOR NAME IN PLUGS TO ACCESS   |
+		|                        |                      | CONTENT OF A CONTAINER THOURGH SETTING ACCESSION SCOPE TO A  CONTAINER   |
+		| CHILD_COUNT            | NONE                 | INTENAL ATTRIBUTE , BUT ACCESSIBLE AS ACCESSOR NAME IN PLUGS TO ACCESS   |
+		|                        |                      | CONTENT OF A CONTAINER THOURGH SETTING ACCESSION SCOPE TO A  CONTAINER   |
+		|                        |                      | ACCESSION KEYWORD                                                        |
+		| CHILD_ARRAY            | NONE                 | NOT ACCESSIBLE ANYWHERE                                                  |
+		| STATE                  | NONE                 | NOT ACCESSIBLE ANYWHERE                                                  |
+		+------------------------+----------------------+--------------------------------------------------------------------------+
+
+
+	[INSERT ATTRIBUTES DESRIPTIONS HERE ]
 
 
 

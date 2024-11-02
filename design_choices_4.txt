@@ -1,0 +1,73 @@
+i have decided the structure :
+1. will have two tags :
+	global 
+	section 
+2. {} : tag denotion , like : {global} some text/ascii art {global}
+
+3. [data_to_fetch/function_name:scope_to_fetch:type] : function/attribute plugin   
+	data_to_fetch name of the method, name of the attribute , example:  module1.lib1.func2, but the function must be non argument function i.e classmethod with no mandatroy argument 
+	scope  : 
+		main : the code base 
+		crnt : crnt secttion 
+		prnt : parent section , if any , can be chained to , i.e prnt.prnt
+	type : 
+		attr : for attributte 
+		method : for method 
+		if the scope is not main , then the thype is ignored and set to be attr always 
+
+4  <key: attributte> value for tags like  :
+	{section 
+		<name : subCommand1>
+		<filter : [module.main.subCommand.register.filterCommand:main:method]>
+	}
+	and key can have function mapped to  a pariticular method in parser which overwrrites the value of the attribute by calling the mapped function on the value itself , after it has been substiuted , in case of dynamic 
+
+		
+
+and func/attr plugin can be nested
+
+
+func/attr plugin design choices : [accessor:scope:accesType]
+
+1. parameter support , currently the functional/attr plugin is in syntax [accessor:scope:accessType], no suport for paramater , which restricts the method defined in the acccsesor type to be with no positional args
+	 but if the syntax is to made [accessor:comma_separted_params:scope:accesType], then the params can be defined too . 
+
+
+
+1. external config read support can be implemented in two types :
+	1. make config a scope  :
+		[configKey:config@configRef:someAccessorType] : here config is the scope and someConfigRef is the refrence to the config file included in the section tag or header tag, suggest me som 
+	2. define a function in parser,and link it to the accessor, scope to main and accessorType to computed , should i keep it static or define a new accessor type like property , which can also be tagged with env@user and user@system scope
+		 	
+		  
+If parameters are included: [accessor:scope:accessType:comma_separated_params]
+If parameters are not included: [accessor:scope:accessType]
+
+
+Hierearichal section accessing design choices 
+
+
+
+
+
+Hierearichal section accessing design choices 
+
+
+
+1. child section to point to prnt section along with sibling sections :
+	if there n sibling then there n -1 sibling refs +1 parnt ref per child section
+	but accesing siblings are short and easy  like sibling@3 or sibling@siblingName3 
+
+2. prnt section reffering to all child secttion adn child only pointing to prnt , no sibling section , to access sibling to do prnt.child@childRef 
+  	if theree n sibling  then only the prnt point to only n  refrences per prnt node 
+	but accessng sibling is prnt.child@3 or prnt.child@childName3
+
+
+
+
+
+if each case , think of the whole nested sections as node and the refrences as the edge 
+
+	for case 1 : then graph will become a  dense directed  graph 
+	for case 2:  the  it will be a tree , but acessing the parent will become impossible 
+but what if the each prnt node  points to all childs but all child nodes also points to the prnt node then  it will remain a tree but bi directional .
